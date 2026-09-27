@@ -3,6 +3,21 @@
 Newest first. Fixes are in [ps3recomp](https://github.com/sp00nznet/ps3recomp)
 unless noted.
 
+## 2026-09-26: in game
+
+Main menu → New Game → story intro → first level (`jb_intro.bgw.sdat`), the
+tornado driven by the left stick at ~16 fps.
+
+| ![menu](media/menu.png) | ![intro level](media/gameplay_start.png) | ![moving](media/gameplay.png) |
+|---|---|---|
+
+| Symptom | Cause |
+|---|---|
+| Menu text invisible | Two bugs, both still open: the glyphs fail the depth test, and the lighting VS computes black. `LD_NO_DEPTH=1` + `LD_FORCE_COL0=<pso>` make it readable. VP condition codes were also unmodeled (fixed) |
+| New Game: "Unable to save game data" | `cellSaveDataListSave2` read the chosen directory from a host struct nothing filled; the title's `newData` in the guest `ListSet` was never read |
+| Wedged right after the save | Wwise's audio SPURS jobs were unlifted: they completed empty and the sound engine waited forever. Six job binaries now captured (`SPU_DUMP_MISS`) and lifted, 0 MISSes |
+| 2 GB log in three minutes | The dispatch-MISS line was uncapped at 1500 jobs/s |
+
 ## 2026-09-26: day one — title screen renders and takes input
 
 Lift and build went through first time with nothing title-specific: 17,138

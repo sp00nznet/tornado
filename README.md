@@ -5,9 +5,15 @@
 
 ## Status
 
-Boots through the Loose Cannon logo and the Bink intro movies to the title
-screen, which renders correctly and takes input. START leaves the title; the
-screen after it draws its text black. See [docs/progress.md](docs/progress.md).
+**In game.** Boots through the logos and Bink intro to the title, the main menu,
+New Game (the save is created), the story intro, and into the first level
+(`jb_intro`) with the tornado under player control at ~16 fps.
+
+![gameplay](docs/media/gameplay.png)
+
+Rendering is incomplete: UI text needs `LD_NO_DEPTH=1` plus a colour override to
+be readable, and debris renders as black blobs. See
+[docs/progress.md](docs/progress.md).
 
 ## Why this title
 
@@ -42,8 +48,18 @@ python ../twistedmetal/tools/decrypt_self.py vfs/PS3_GAME/USRDIR/EBOOT.BIN \
 `PS3_MAIN_STACK_LV2=1` is required: the game's SPU memcpy picks its path by
 comparing the destination with the stack's top nibble (see progress.md).
 
-Headless input: `PAD_SCRIPT="18:0x0008"` presses START at 18 s; frames with
-`LD_FRAME_DUMP=<dir>`.
+Headless, into gameplay (START, CROSS through the menu, New Game and the intro,
+then the left stick forward from 250 s; frames with `LD_FRAME_DUMP=<dir>`):
+
+```bash
+S="18:0x0008,50:0x4000,70:0x4000"; for t in $(seq 95 8 240); do S="$S,$t:0x4000"; done
+PAD_SCRIPT="$S" PAD_STICK="128,0,128,128,250" \
+LD_NO_DEPTH=1 LD_FORCE_COL0=aea9d325fc921c6e LD_FRAME_DUMP=frames \
+PS3_VFS_ROOT=vfs RSX_LIVE_DRAW=1 PS3_MAIN_STACK_LV2=1 ./build/tornado vfs/PS3_GAME/USRDIR/EBOOT.elf
+```
+
+The Wwise SPURS jobs must be captured and lifted once (`spu_miss/`, see
+`tools/relift.sh`) or the game wedges after the New Game save.
 
 ## Legal
 
