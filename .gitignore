@@ -1,0 +1,17 @@
+build*/
+game/
+vfs/
+analysis/
+src/recomp/
+src/gen/
+*.map
+# game-derived data and local scratch
+gamedata/
+*.bin
+scratch/
+spu_miss/
+*.log
+src/spu_gen/*/
+vfs_tmp/
+extract.log
+build.log
