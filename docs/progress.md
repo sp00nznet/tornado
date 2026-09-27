@@ -3,6 +3,27 @@
 Newest first. Fixes are in [ps3recomp](https://github.com/sp00nznet/ps3recomp)
 unless noted.
 
+## 2026-09-27: rendering correct, no overrides
+
+![hero](media/hero.gif)
+
+The black text, black speech bubbles, black smoke and leaves, the cyan
+"trapezoid", the black main menu and the flickering display all came from
+runtime bugs; nothing title-specific. Fixes are in ps3recomp:
+
+| Symptom | Cause |
+|---|---|
+| UI, particles and bubbles rendered black; the lit VS output 0 | **Vertex-program flow control was dropped.** BRI/CAL/RET carry no write mask, so the decompiler skipped them and every block ran: a shader branching around its lighting when lighting is off zeroed its colour and summed no lights. ~40 of this game's VPs branch. Now emitted as a block state machine |
+| Colour NaN in lit shaders | NV vertex programs multiply by the legacy rule (0 × anything = 0, INF/NaN included); IEEE made one RCP of zero poison the sum, and the FP's NaN guard turned it black. MUL/MAD/DP3/DP4/DPH now use it |
+| Predicated writes ran unconditionally, CC-only writes lost | VP condition codes were unmodelled |
+| Main menu presented black on two frames in three | The scaled NV3089 resolve was presented as a live alias of its source; it is now a real GPU copy into the display buffer at resolve time, sourced from the surface with the closest base (a stale surface at 0x0 "contained" the address first) |
+| Boot hang, ~1 run in 5, before GCM init | A raw SPU's outbound mailbox is one deep and `wrch` stalls when full; buffering let two replies queue and the PPU, testing bit 0 of the count, read 2 as empty |
+| Shader constants overwritten by FIFO words | `rsx_dispatch_method` indexed `regs[]` with methods up to 0xFFFFC; now bounds-checked |
+
+`tools/vp_eval.py` in ps3recomp evaluates a decompiled VP on the CPU with the
+constants and vertices a traced draw used — how the NaN and the dropped
+branches were found.
+
 ## 2026-09-26: in game
 
 Main menu → New Game → story intro → first level (`jb_intro.bgw.sdat`), the
